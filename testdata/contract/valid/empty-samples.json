@@ -1,0 +1,13 @@
+{
+  "id": "c9e4a1b2-3d5f-4e60-a7c8-9b0d2f4e6a81",
+  "mode": "filter",
+  "started_at_ms": 1792941000000,
+  "ended_at_ms": 1792941001000,
+  "dose_g": 20.0,
+  "yield_g": 0,
+  "time_to_first_drop_s": null,
+  "flow_avg_gps": 0,
+  "flow_peak_gps": 0,
+  "interrupted": true,
+  "samples": []
+}

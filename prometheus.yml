@@ -1,0 +1,7 @@
+storage:
+  tsdb:
+    # Brews reach the exporter late (phone offline, upload retries) and the sync runs every
+    # 15 minutes, so their samples are older than what Prometheus already holds. Samples older
+    # than this window are rejected (400 "too old sample"); the exporter logs the brew as
+    # rejected and keeps it in SQLite.
+    out_of_order_time_window: 30d

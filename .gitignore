@@ -1,0 +1,6 @@
+/timemore-dot-prometheus-exporter
+*.db
+*.db-wal
+*.db-shm
+docker-compose.yml
+.env

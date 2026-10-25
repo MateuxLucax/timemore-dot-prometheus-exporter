@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/caparao/brew.schema.json",
+  "title": "Caparao brew upload",
+  "description": "Body of POST /api/v1/brews. One rule is not expressible here: ended_at_ms must be greater than started_at_ms.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id", "mode", "started_at_ms", "ended_at_ms", "dose_g", "yield_g",
+    "time_to_first_drop_s", "flow_avg_gps", "flow_peak_gps", "interrupted", "samples"
+  ],
+  "properties": {
+    "id": {
+      "description": "Random UUID generated on the phone, lowercase. The server upserts on it.",
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "mode": { "enum": ["filter", "espresso"] },
+    "started_at_ms": {
+      "description": "Unix epoch milliseconds.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "ended_at_ms": {
+      "description": "Unix epoch milliseconds, strictly greater than started_at_ms.",
+      "type": "integer",
+      "minimum": 1
+    },
+    "dose_g": { "description": "Coffee dose in grams.", "type": "number", "exclusiveMinimum": 0, "maximum": 1000 },
+    "yield_g": { "description": "Final liquid weight in grams.", "type": "number", "minimum": 0, "maximum": 10000 },
+    "time_to_first_drop_s": {
+      "description": "Seconds from start to the first drop. null for filter brews, which have none.",
+      "type": ["number", "null"],
+      "minimum": 0
+    },
+    "flow_avg_gps": { "type": "number", "minimum": 0 },
+    "flow_peak_gps": { "type": "number", "minimum": 0 },
+    "interrupted": {
+      "description": "true when the brew ended early (cup lifted, connection lost, stopped by hand).",
+      "type": "boolean"
+    },
+    "samples": {
+      "description": "The curve. May be empty.",
+      "type": "array",
+      "maxItems": 20000,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["t_ms", "weight_g", "flow_gps"],
+        "properties": {
+          "t_ms": { "description": "Milliseconds since started_at_ms.", "type": "integer", "minimum": 0 },
+          "weight_g": { "type": "number" },
+          "flow_gps": { "type": "number" }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "id": "5d2b9f60-1c4e-4a8b-8e37-c0a1f6d3b7e5",
+  "mode": "espresso",
+  "started_at_ms": 1792938000000,
+  "ended_at_ms": 1792938012000,
+  "dose_g": 18.5,
+  "yield_g": 9.8,
+  "time_to_first_drop_s": 7.1,
+  "flow_avg_gps": 0.8,
+  "flow_peak_gps": 1.4,
+  "interrupted": true,
+  "samples": [
+    { "t_ms": 0, "weight_g": 0.0, "flow_gps": 0.0 },
+    { "t_ms": 12000, "weight_g": 9.8, "flow_gps": 1.4 }
+  ]
+}

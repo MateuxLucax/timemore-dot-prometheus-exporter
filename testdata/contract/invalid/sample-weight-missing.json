@@ -1,0 +1,38 @@
+{
+  "id": "0f8e1c2a-5b7d-4c3e-9a10-2f6d8b4e7c91",
+  "mode": "espresso",
+  "started_at_ms": 1792931400000,
+  "ended_at_ms": 1792931428600,
+  "dose_g": 18.0,
+  "yield_g": 36.4,
+  "time_to_first_drop_s": 6.2,
+  "flow_avg_gps": 1.3,
+  "flow_peak_gps": 2.1,
+  "interrupted": false,
+  "samples": [
+    {
+      "t_ms": 0,
+      "weight_g": 0.0,
+      "flow_gps": 0.0
+    },
+    {
+      "t_ms": 6200,
+      "weight_g": 0.4,
+      "flow_gps": 0.3
+    },
+    {
+      "t_ms": 15000,
+      "weight_g": 17.9,
+      "flow_gps": 2.1
+    },
+    {
+      "t_ms": 28600,
+      "weight_g": 36.4,
+      "flow_gps": 1.1
+    },
+    {
+      "t_ms": 30000,
+      "flow_gps": 1
+    }
+  ]
+}

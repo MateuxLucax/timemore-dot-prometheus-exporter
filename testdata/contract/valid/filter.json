@@ -1,0 +1,18 @@
+{
+  "id": "a3c1d7e4-8f20-4b6a-b5d9-1e7c3a9f0b24",
+  "mode": "filter",
+  "started_at_ms": 1792935000000,
+  "ended_at_ms": 1792935195000,
+  "dose_g": 15.0,
+  "yield_g": 250.0,
+  "time_to_first_drop_s": null,
+  "flow_avg_gps": 1.3,
+  "flow_peak_gps": 4.8,
+  "interrupted": false,
+  "samples": [
+    { "t_ms": 0, "weight_g": 0.0, "flow_gps": 0.0 },
+    { "t_ms": 30000, "weight_g": 45.0, "flow_gps": 4.8 },
+    { "t_ms": 120000, "weight_g": 160.5, "flow_gps": 1.2 },
+    { "t_ms": 195000, "weight_g": 250.0, "flow_gps": 0.4 }
+  ]
+}

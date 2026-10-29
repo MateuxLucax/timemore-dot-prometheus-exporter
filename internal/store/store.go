@@ -202,6 +202,21 @@ func (s *Store) List(ctx context.Context) ([]Summary, error) {
 	return out, rows.Err()
 }
 
+// ErrNotFound is returned by Get for an unknown brew id.
+var ErrNotFound = errors.New("brew not found")
+
+// Get returns brew id with its samples in upload order, as served by GET /api/v1/brews/{id}.
+func (s *Store) Get(ctx context.Context, id string) (*brew.Brew, error) {
+	var p Pending
+	if err := s.load(ctx, id, &p); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+	return &p.Brew, nil
+}
+
 // Pending is a brew the sync loop has not sent in its current version.
 type Pending struct {
 	Brew    brew.Brew

@@ -38,6 +38,9 @@ type Brew struct {
 	Samples          []Sample `json:"samples"`
 }
 
+// ValidID reports whether id is a lowercase UUID, the only form a brew id takes.
+func ValidID(id string) bool { return uuidRe.MatchString(id) }
+
 // Parse decodes and validates a request body against the contract rules.
 func Parse(body []byte) (*Brew, error) {
 	dec := json.NewDecoder(bytes.NewReader(body))

@@ -35,6 +35,7 @@ the app repo's stub server and this server.
 |---------|------|--------|
 | `POST /api/v1/brews` | Bearer | `201` new brew, `200` existing `id` replaced (brew and all its samples), `400` invalid body, `401` bad token, `413` over 4 MiB, `405` wrong method. Errors are `{"error": "..."}`. 2xx only after the SQLite commit. |
 | `GET /api/v1/brews` | Bearer | `200`, every brew without samples (with `sample_count`), newest first. Creates nothing; used by the app's connection test. |
+| `GET /api/v1/brews/{id}` | Bearer | `200`, the brew with all its samples in the upload format (samples in upload order), `404` unknown id, `405` other methods. |
 | `GET /healthz` | none | `200 ok` |
 
 ## Metrics

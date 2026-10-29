@@ -1,10 +1,11 @@
 name: CI
 
-# Manual (Actions tab, on main) or a pushed v* tag while the repository is private, to save GitHub Free minutes. Once
-# public, add back `push: branches: [main]` and `pull_request:` for an image and release on every green push.
+# Tests on every pull request; an image and a release on every green push to main. Also manual or a pushed v* tag.
 on:
   workflow_dispatch:
+  pull_request:
   push:
+    branches: [main]
     tags: ['v*']
 
 permissions:

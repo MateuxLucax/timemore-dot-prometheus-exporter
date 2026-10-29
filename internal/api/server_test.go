@@ -219,3 +219,66 @@ func TestUnknownPath(t *testing.T) {
 		t.Fatalf("unknown path = %d, want 404", resp.StatusCode)
 	}
 }
+
+func TestGetBrewReturnsSamples(t *testing.T) {
+	ts, _ := newTestServer(t)
+	for name, body := range contractFiles(t, "valid") {
+		do(t, "POST", ts.URL+"/api/v1/brews", testToken, body)
+		want, err := brew.Parse(body)
+		if err != nil {
+			t.Fatal(err)
+		}
+		resp, b := do(t, "GET", ts.URL+"/api/v1/brews/"+want.ID, testToken, nil)
+		if resp.StatusCode != 200 {
+			t.Fatalf("%s: GET = %d (%s)", name, resp.StatusCode, b)
+		}
+		// The response is a valid upload body describing the same brew, samples in upload order.
+		got, err := brew.Parse(b)
+		if err != nil {
+			t.Fatalf("%s: response is not a valid brew: %v (%s)", name, err, b)
+		}
+		if gj, _ := json.Marshal(got); string(gj) != mustJSON(t, want) {
+			t.Errorf("%s: got %s, want %s", name, gj, mustJSON(t, want))
+		}
+	}
+}
+
+func mustJSON(t *testing.T, v any) string {
+	t.Helper()
+	b, err := json.Marshal(v)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return string(b)
+}
+
+func TestGetBrewErrors(t *testing.T) {
+	ts, logs := newTestServer(t)
+	const unknown = "00000000-0000-4000-8000-000000000000"
+	cases := []struct {
+		method, path, token string
+		want                int
+	}{
+		{"GET", "/api/v1/brews/" + unknown, testToken, 404},
+		{"GET", "/api/v1/brews/NOT-A-UUID", testToken, 404},
+		{"GET", "/api/v1/brews/" + unknown + "/x", testToken, 404},
+		{"GET", "/api/v1/brews/", testToken, 404},
+		{"GET", "/api/v1/brews/" + unknown, "", 401},
+		{"GET", "/api/v1/brews/" + unknown, "wrong", 401},
+		{"POST", "/api/v1/brews/" + unknown, testToken, 405},
+		{"DELETE", "/api/v1/brews/" + unknown, testToken, 405},
+	}
+	for _, c := range cases {
+		resp, b := do(t, c.method, ts.URL+c.path, c.token, nil)
+		if resp.StatusCode != c.want {
+			t.Errorf("%s %s = %d, want %d", c.method, c.path, resp.StatusCode, c.want)
+		}
+		var e map[string]string
+		if json.Unmarshal(b, &e) != nil || e["error"] == "" {
+			t.Errorf("%s %s: error body %q", c.method, c.path, b)
+		}
+	}
+	if strings.Contains(logs.String(), "wrong") {
+		t.Error("token leaked into the log")
+	}
+}

@@ -1,7 +1,7 @@
 # Upload contract
 
-The wire format of `POST /api/v1/brews`, shared by the Android client and every server (the stub in `../stub`, later
-`caparao-exporter`). The same files are checked on both sides, so they cannot drift apart.
+The wire format of `POST /api/v1/brews` (and of `GET /api/v1/brews/{id}`, which returns the same body), shared by the Android client and every server (the stub in `../stub`, later
+`timemore-dot-prometheus-exporter`). The same files are checked on both sides, so they cannot drift apart.
 
 | Path | What it is |
 |------|------------|
@@ -46,6 +46,19 @@ Tests iterate over both directories, so adding a file adds a test case. Use exam
 Authentication is `Authorization: Bearer <token>`. Error bodies are always `{"error": "<message>"}`. Every other
 status is treated like its class: other `4xx` (also `404`, `408`, `429`) are not retried, `3xx` is shown as an error and
 never followed, so the token is not sent to another location.
+
+## Reading a brew back
+
+`GET /api/v1/brews/{id}` with the Bearer token returns one stored brew in the same format as the upload body above,
+samples included in the order they were uploaded, so the response itself validates against `brew.schema.json`.
+`GET /api/v1/brews` stays the lightweight list: summaries without samples, with `sample_count`.
+
+| Status | Meaning |
+|--------|---------|
+| `200` | The brew, as last uploaded |
+| `401` | Missing or wrong Bearer token |
+| `404` | No brew with this `id` (also for an `id` that is not a lowercase UUID) |
+| `405` | Any method other than `GET` |
 
 ## Connection test
 

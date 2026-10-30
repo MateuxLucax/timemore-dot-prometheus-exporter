@@ -13,8 +13,11 @@ Tests iterate over both directories, so adding a file adds a test case. Use exam
 
 ## Rules and decisions
 
-- All fields are required, and unknown properties (also inside samples) are rejected. A new field means a change to
-  the contract here first.
+- All fields are required except the brew notes below, and unknown properties (also inside samples) are rejected. A
+  new field means a change to the contract here first.
+- Brew notes ([ADR 0021](../docs/adr/0021-brew-notes.md)), optional and left out when unset, never null: `recipe_name`
+  (≤ 80 characters), `coffee` (≤ 80), `grind` (≤ 40), `water_temp_c` (integer 1–100), `rating` (integer 1–5), `notes`
+  (≤ 1000, kept out of Prometheus). An edit on the phone re-sends the brew, and the upsert replaces them.
 - `id`: lowercase UUID string (8-4-4-4-12 hex), generated on the phone. The server upserts on it
   ([ADR 0007](../docs/adr/0007-idempotent-upload.md)); the same `id` re-sent with a different body replaces the stored brew.
 - `mode`: `"filter"` or `"espresso"`.

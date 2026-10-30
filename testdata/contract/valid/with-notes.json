@@ -1,0 +1,40 @@
+{
+  "id": "b7e2c4a1-6d3f-4e8b-9a1c-2f5d8e0b3c47",
+  "mode": "filter",
+  "started_at_ms": 1792935000000,
+  "ended_at_ms": 1792935195000,
+  "dose_g": 15.0,
+  "yield_g": 250.0,
+  "time_to_first_drop_s": null,
+  "flow_avg_gps": 1.3,
+  "flow_peak_gps": 4.8,
+  "interrupted": false,
+  "recipe_name": "V60",
+  "coffee": "Caparaó natural",
+  "grind": "22",
+  "water_temp_c": 94,
+  "rating": 4,
+  "notes": "Sweet, a bit thin.",
+  "samples": [
+    {
+      "t_ms": 0,
+      "weight_g": 0.0,
+      "flow_gps": 0.0
+    },
+    {
+      "t_ms": 30000,
+      "weight_g": 45.0,
+      "flow_gps": 4.8
+    },
+    {
+      "t_ms": 120000,
+      "weight_g": 160.5,
+      "flow_gps": 1.2
+    },
+    {
+      "t_ms": 195000,
+      "weight_g": 250.0,
+      "flow_gps": 0.4
+    }
+  ]
+}

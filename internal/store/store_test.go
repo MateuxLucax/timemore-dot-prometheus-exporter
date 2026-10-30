@@ -111,3 +111,35 @@ func TestCheckpoint(t *testing.T) {
 		t.Fatalf("after reset: %+v", p)
 	}
 }
+
+func TestBrewNotesRoundTrip(t *testing.T) {
+	s := open(t, filepath.Join(t.TempDir(), "db.sqlite"))
+	body, err := os.ReadFile(filepath.Join("..", "..", "testdata", "contract", "valid", "with-notes.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	b, err := brew.Parse(body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := s.Upsert(t.Context(), b); err != nil {
+		t.Fatal(err)
+	}
+	got, err := s.Get(t.Context(), b.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Coffee == nil || *got.Coffee != *b.Coffee || got.Rating == nil || *got.Rating != *b.Rating ||
+		got.WaterTempC == nil || *got.WaterTempC != *b.WaterTempC || got.Notes == nil || *got.Notes != *b.Notes {
+		t.Fatalf("notes not kept: %+v", got)
+	}
+
+	// An edit on the phone that clears the notes re-sends the brew without them.
+	b.Coffee, b.Rating, b.Notes = nil, nil, nil
+	if _, err := s.Upsert(t.Context(), b); err != nil {
+		t.Fatal(err)
+	}
+	if got, _ = s.Get(t.Context(), b.ID); got.Coffee != nil || got.Rating != nil || got.Notes != nil {
+		t.Fatalf("cleared notes kept: %+v", got)
+	}
+}

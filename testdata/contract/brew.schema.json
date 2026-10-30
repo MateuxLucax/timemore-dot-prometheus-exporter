@@ -39,6 +39,12 @@
       "description": "true when the brew ended early (cup lifted, connection lost, stopped by hand).",
       "type": "boolean"
     },
+    "recipe_name": { "description": "Optional: the recipe followed, as named at brew time. Left out when none.", "type": "string", "maxLength": 80 },
+    "coffee": { "description": "Optional: the coffee, free text.", "type": "string", "maxLength": 80 },
+    "grind": { "description": "Optional: the grinder setting, free text.", "type": "string", "maxLength": 40 },
+    "water_temp_c": { "description": "Optional: water temperature in °C.", "type": "integer", "minimum": 1, "maximum": 100 },
+    "rating": { "description": "Optional: how it tasted, 1 to 5.", "type": "integer", "minimum": 1, "maximum": 5 },
+    "notes": { "description": "Optional: tasting notes. Never sent to Prometheus.", "type": "string", "maxLength": 1000 },
     "samples": {
       "description": "The curve. May be empty.",
       "type": "array",

@@ -47,6 +47,12 @@ var migrations = []string{
 		PRIMARY KEY (brew_id, seq)
 	);
 	CREATE INDEX brews_pending ON brews(sent_version, version);`,
+	`ALTER TABLE brews ADD COLUMN recipe_name TEXT;
+	ALTER TABLE brews ADD COLUMN coffee TEXT;
+	ALTER TABLE brews ADD COLUMN grind TEXT;
+	ALTER TABLE brews ADD COLUMN water_temp_c INTEGER;
+	ALTER TABLE brews ADD COLUMN rating INTEGER;
+	ALTER TABLE brews ADD COLUMN notes TEXT;`,
 }
 
 // Store is a SQLite database. It is safe for concurrent use.
@@ -134,15 +140,19 @@ func (s *Store) Upsert(ctx context.Context, b *brew.Brew) (existed bool, err err
 		ttfd = *b.TimeToFirstDropS
 	}
 	_, err = tx.ExecContext(ctx, `INSERT INTO brews (id, mode, started_at_ms, ended_at_ms, dose_g, yield_g,
-		time_to_first_drop_s, flow_avg_gps, flow_peak_gps, interrupted, received_at_ms, version)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		time_to_first_drop_s, flow_avg_gps, flow_peak_gps, interrupted, received_at_ms, version,
+		recipe_name, coffee, grind, water_temp_c, rating, notes)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		ON CONFLICT(id) DO UPDATE SET mode = excluded.mode, started_at_ms = excluded.started_at_ms,
 			ended_at_ms = excluded.ended_at_ms, dose_g = excluded.dose_g, yield_g = excluded.yield_g,
 			time_to_first_drop_s = excluded.time_to_first_drop_s, flow_avg_gps = excluded.flow_avg_gps,
 			flow_peak_gps = excluded.flow_peak_gps, interrupted = excluded.interrupted,
-			received_at_ms = excluded.received_at_ms, version = excluded.version, sync_error = NULL`,
+			received_at_ms = excluded.received_at_ms, version = excluded.version, sync_error = NULL,
+			recipe_name = excluded.recipe_name, coffee = excluded.coffee, grind = excluded.grind,
+			water_temp_c = excluded.water_temp_c, rating = excluded.rating, notes = excluded.notes`,
 		b.ID, b.Mode, b.StartedAtMs, b.EndedAtMs, b.DoseG, b.YieldG, ttfd, b.FlowAvgGps, b.FlowPeakGps,
-		b.Interrupted, time.Now().UnixMilli(), version+1)
+		b.Interrupted, time.Now().UnixMilli(), version+1,
+		b.RecipeName, b.Coffee, b.Grind, b.WaterTempC, b.Rating, b.Notes)
 	if err != nil {
 		return false, err
 	}
@@ -262,9 +272,10 @@ func (s *Store) load(ctx context.Context, id string, p *Pending) error {
 	var b brew.Brew
 	var ttfd sql.NullFloat64
 	if err := tx.QueryRowContext(ctx, `SELECT mode, started_at_ms, ended_at_ms, dose_g, yield_g,
-		time_to_first_drop_s, flow_avg_gps, flow_peak_gps, interrupted, version FROM brews WHERE id = ?`, id).Scan(
+		time_to_first_drop_s, flow_avg_gps, flow_peak_gps, interrupted, version,
+		recipe_name, coffee, grind, water_temp_c, rating, notes FROM brews WHERE id = ?`, id).Scan(
 		&b.Mode, &b.StartedAtMs, &b.EndedAtMs, &b.DoseG, &b.YieldG, &ttfd, &b.FlowAvgGps, &b.FlowPeakGps,
-		&b.Interrupted, &p.Version); err != nil {
+		&b.Interrupted, &p.Version, &b.RecipeName, &b.Coffee, &b.Grind, &b.WaterTempC, &b.Rating, &b.Notes); err != nil {
 		return err
 	}
 	b.ID = id

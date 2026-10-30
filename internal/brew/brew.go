@@ -35,7 +35,14 @@ type Brew struct {
 	FlowAvgGps       float64  `json:"flow_avg_gps"`
 	FlowPeakGps      float64  `json:"flow_peak_gps"`
 	Interrupted      bool     `json:"interrupted"`
-	Samples          []Sample `json:"samples"`
+	// Optional brew notes (caparao docs/adr/0021-brew-notes.md); left out of the body when unset.
+	RecipeName *string  `json:"recipe_name,omitempty"`
+	Coffee     *string  `json:"coffee,omitempty"`
+	Grind      *string  `json:"grind,omitempty"`
+	WaterTempC *int64   `json:"water_temp_c,omitempty"`
+	Rating     *int64   `json:"rating,omitempty"`
+	Notes      *string  `json:"notes,omitempty"`
+	Samples    []Sample `json:"samples"`
 }
 
 // ValidID reports whether id is a lowercase UUID, the only form a brew id takes.
@@ -60,7 +67,8 @@ func Parse(body []byte) (*Brew, error) {
 		return nil, errors.New("body must be a JSON object")
 	}
 	if err := onlyKeys(obj, "", "id", "mode", "started_at_ms", "ended_at_ms", "dose_g", "yield_g",
-		"time_to_first_drop_s", "flow_avg_gps", "flow_peak_gps", "interrupted", "samples"); err != nil {
+		"time_to_first_drop_s", "flow_avg_gps", "flow_peak_gps", "interrupted", "samples",
+		"recipe_name", "coffee", "grind", "water_temp_c", "rating", "notes"); err != nil {
 		return nil, err
 	}
 
@@ -132,6 +140,41 @@ func Parse(body []byte) (*Brew, error) {
 	}
 	if b.Interrupted, ok = iv.(bool); !ok {
 		return nil, errors.New("interrupted must be a boolean")
+	}
+
+	for _, f := range []struct {
+		key string
+		max int
+		dst **string
+	}{{"recipe_name", 80, &b.RecipeName}, {"coffee", 80, &b.Coffee}, {"grind", 40, &b.Grind}, {"notes", 1000, &b.Notes}} {
+		if _, present := obj[f.key]; !present {
+			continue
+		}
+		v, err := str(obj, f.key)
+		if err != nil {
+			return nil, err
+		}
+		if len([]rune(v)) > f.max {
+			return nil, fmt.Errorf("%s must be at most %d characters", f.key, f.max)
+		}
+		*f.dst = &v
+	}
+	for _, f := range []struct {
+		key      string
+		min, max int64
+		dst      **int64
+	}{{"water_temp_c", 1, 100, &b.WaterTempC}, {"rating", 1, 5, &b.Rating}} {
+		if _, present := obj[f.key]; !present {
+			continue
+		}
+		v, err := integer(obj, f.key, f.min)
+		if err != nil {
+			return nil, err
+		}
+		if v > f.max {
+			return nil, fmt.Errorf("%s must be <= %d", f.key, f.max)
+		}
+		*f.dst = &v
 	}
 
 	sv, present := obj["samples"]

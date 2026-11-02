@@ -15,9 +15,9 @@
       "type": "string",
       "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
     },
-    "mode": { "enum": ["filter", "espresso"] },
+    "mode": { "enum": ["filter", "espresso", "french_press"] },
     "started_at_ms": {
-      "description": "Unix epoch milliseconds.",
+      "description": "Unix epoch milliseconds of the first drop (espresso) or the first water (filter and french press).",
       "type": "integer",
       "minimum": 0
     },
@@ -29,7 +29,7 @@
     "dose_g": { "description": "Coffee dose in grams.", "type": "number", "exclusiveMinimum": 0, "maximum": 1000 },
     "yield_g": { "description": "Final liquid weight in grams.", "type": "number", "minimum": 0, "maximum": 10000 },
     "time_to_first_drop_s": {
-      "description": "Seconds from start to the first drop. null for filter brews, which have none.",
+      "description": "Seconds from the tare to the first drop. null for filter and french press brews, which have none.",
       "type": ["number", "null"],
       "minimum": 0
     },

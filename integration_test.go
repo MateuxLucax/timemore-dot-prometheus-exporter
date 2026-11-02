@@ -245,4 +245,40 @@ func TestIntegration(t *testing.T) {
 			t.Fatalf("sync: %v\n%s", err, out)
 		}
 	})
+
+	t.Run("french press carries its mode and no first-drop metric", func(t *testing.T) {
+		fraw, err := os.ReadFile("testdata/contract/valid/french-press.json")
+		if err != nil {
+			t.Fatal(err)
+		}
+		var fp map[string]any
+		json.Unmarshal(fraw, &fp)
+		id := randomUUID()
+		start := time.Now().Add(-30 * time.Minute).UnixMilli()
+		end := start + 240000
+		fp["id"], fp["started_at_ms"], fp["ended_at_ms"] = id, start, end
+		body, _ := json.Marshal(fp)
+		if code := post(t, base, token, body); code != 201 {
+			t.Fatalf("POST = %d, want 201", code)
+		}
+		if code := post(t, base, token, body); code != 200 {
+			t.Fatalf("resend POST = %d, want 200", code)
+		}
+		if out, err := run(t, bin, env, "sync"); err != nil || !strings.Contains(out, "sent 1, rejected 0") {
+			t.Fatalf("sync: %v\n%s", err, out)
+		}
+		got := query(t, prom, fmt.Sprintf(`{__name__=~"caparao_brew_.*",id=%q}[2h]`, id), time.Now().UnixMilli())
+		want := map[string][]itPoint{
+			"caparao_brew_yield_grams":               {{end, 300}},
+			"caparao_brew_dose_grams":                {{end, 20}},
+			"caparao_brew_ratio":                     {{end, 15}},
+			"caparao_brew_duration_seconds":          {{end, 240}},
+			"caparao_brew_flow_avg_grams_per_second": {{end, 1.3}},
+			"caparao_brew_weight_grams":              {{start, 0}, {start + 4000, 100}},
+			"caparao_brew_flow_grams_per_second":     {{start, 0}, {start + 4000, 25}},
+		}
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("stored:\n%+v\nwant:\n%+v", got, want)
+		}
+	})
 }

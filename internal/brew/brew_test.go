@@ -61,6 +61,13 @@ func TestParseFields(t *testing.T) {
 	if f.Mode != "filter" || f.TimeToFirstDropS != nil {
 		t.Fatalf("filter: %+v", f)
 	}
+	fp, err := Parse(files(t, "valid")["french-press.json"])
+	if err != nil {
+		t.Fatal(err)
+	}
+	if fp.Mode != "french_press" || fp.TimeToFirstDropS != nil || len(fp.Samples) != 2 {
+		t.Fatalf("french press: %+v", fp)
+	}
 }
 
 func TestErrorMessages(t *testing.T) {
@@ -69,7 +76,8 @@ func TestErrorMessages(t *testing.T) {
 		`[]`:      "JSON object",
 		`{"x":1}`: `unknown property "x"`,
 		`{} {}`:   "data after",
-		`{"id":"A0000000-0000-0000-0000-000000000000"}`: "lowercase UUID",
+		`{"id":"A0000000-0000-0000-0000-000000000000"}`:                   "lowercase UUID",
+		`{"id":"c4b8f2a6-1d95-4e37-8b60-7f3a2c9e5d18","mode":"pourover"}`: `mode must be "filter", "espresso" or "french_press"`,
 	} {
 		_, err := Parse([]byte(body))
 		if err == nil || !strings.Contains(err.Error(), want) {

@@ -1,0 +1,44 @@
+name: Assign default owner
+
+# Metadata-only automation: this workflow never checks out or executes repository code.
+# pull_request_target runs from the default branch with a write token, so the event payload
+# is used only for the GitHub-assigned number and the current assignee list.
+on:
+  issues:
+    types: [opened, reopened]
+  pull_request_target:
+    types: [opened, reopened]
+
+permissions: {}
+
+jobs:
+  assign:
+    name: Assign MateuxLucax
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Add the default assignee without removing existing ones
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const assignee = 'MateuxLucax';
+            const subject = context.payload.issue ?? context.payload.pull_request;
+            if (!subject || !Number.isInteger(subject.number)) {
+              core.setFailed('no issue or pull request number in the event payload');
+              return;
+            }
+            const current = (subject.assignees ?? []).map((user) => user.login);
+            if (current.includes(assignee)) {
+              core.info(`${assignee} is already assigned to #${subject.number}`);
+              return;
+            }
+            await github.rest.issues.addAssignees({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: subject.number,
+              assignees: [assignee],
+            });
+            core.info(`Assigned ${assignee} to #${subject.number}`);

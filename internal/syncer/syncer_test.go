@@ -84,7 +84,7 @@ func pending(t *testing.T, st *store.Store) int {
 func TestPrometheusDownThenUp(t *testing.T) {
 	st, fp, sy, _ := setup(t)
 	ctx := t.Context()
-	names := []string{"espresso.json", "filter.json", "interrupted.json", "empty-samples.json"}
+	names := []string{"espresso.json", "filter.json", "french-press.json", "interrupted.json", "empty-samples.json"}
 	fp.down = true
 	for _, n := range names {
 		if _, err := st.Upsert(ctx, contract(t, n)); err != nil {
@@ -224,6 +224,40 @@ func TestSeriesTimestamps(t *testing.T) {
 	}
 	if n := len(Series(contract(t, "empty-samples.json"))); n < 5 || n > 6 {
 		t.Errorf("empty-samples: %d series", n)
+	}
+}
+
+func TestFrenchPressSeries(t *testing.T) {
+	b := contract(t, "french-press.json")
+	series := Series(b)
+	if len(series) != 7 {
+		t.Fatalf("french press has %d series, want 7 (5 summaries + 2 curves)", len(series))
+	}
+	got := map[string][]remotewrite.Point{}
+	for _, s := range series {
+		if labelValue(s, "mode") != "french_press" || labelValue(s, "id") != b.ID || len(s.Labels) != 3 {
+			t.Errorf("labels = %+v", s.Labels)
+		}
+		if name := labelValue(s, "__name__"); name == "caparao_brew_time_to_first_drop_seconds" {
+			t.Errorf("french press must not carry a first-drop series")
+		}
+		got[labelValue(s, "__name__")] = s.Points
+	}
+	end := b.EndedAtMs
+	for name, v := range map[string]float64{
+		"caparao_brew_yield_grams": 300, "caparao_brew_dose_grams": 20, "caparao_brew_ratio": 15,
+		"caparao_brew_duration_seconds": 240, "caparao_brew_flow_avg_grams_per_second": 1.3,
+	} {
+		if p := got[name]; len(p) != 1 || p[0].TsMs != end || p[0].Value != v {
+			t.Errorf("%s = %+v, want %v at %d", name, p, v, end)
+		}
+	}
+	if w := got["caparao_brew_weight_grams"]; len(w) != 2 || w[0].TsMs != b.StartedAtMs || w[0].Value != 0 ||
+		w[1].TsMs != b.StartedAtMs+4000 || w[1].Value != 100 {
+		t.Errorf("weight curve = %+v", w)
+	}
+	if f := got["caparao_brew_flow_grams_per_second"]; len(f) != 2 || f[1].Value != 25 {
+		t.Errorf("flow curve = %+v", f)
 	}
 }
 

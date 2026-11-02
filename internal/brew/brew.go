@@ -84,8 +84,8 @@ func Parse(body []byte) (*Brew, error) {
 	if b.Mode, err = str(obj, "mode"); err != nil {
 		return nil, err
 	}
-	if b.Mode != "filter" && b.Mode != "espresso" {
-		return nil, errors.New(`mode must be "filter" or "espresso"`)
+	if b.Mode != "filter" && b.Mode != "espresso" && b.Mode != "french_press" {
+		return nil, errors.New(`mode must be "filter", "espresso" or "french_press"`)
 	}
 	if b.StartedAtMs, err = integer(obj, "started_at_ms", 0); err != nil {
 		return nil, err

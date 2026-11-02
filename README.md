@@ -7,8 +7,8 @@
 ![Grafana](https://img.shields.io/badge/grafana-%23F46800.svg?style=for-the-badge&logo=grafana&logoColor=white)
 
 The server for the [Caparaó](https://github.com/MateuxLucax/caparao) Android app, which records
-espresso and filter brews from a Timemore scale. It receives each brew over HTTP, stores it in
-SQLite, and copies it to Prometheus with the
+espresso, filter and French press brews from a Timemore scale. It receives each brew over HTTP,
+stores it in SQLite, and copies it to Prometheus with the
 [remote write](https://prometheus.io/docs/specs/prw/remote_write_spec/) 1.0 protocol, keeping
 the brew's original timestamps.
 
@@ -38,10 +38,13 @@ the app repo's stub server and this server.
 | `GET /api/v1/brews/{id}` | Bearer | `200`, the brew with all its samples in the upload format (samples in upload order), `404` unknown id, `405` other methods. |
 | `GET /healthz` | none | `200 ok` |
 
+`mode` is `espresso`, `filter` or `french_press`. Filter and French press brews send
+`time_to_first_drop_s: null`; only espresso has a first drop.
+
 ## Metrics
 
-All carry the labels `mode` (`espresso` or `filter`) and `id` (the brew's UUID; why, see
-[ADR 0004](docs/adr/0004-labels-and-cardinality.md)).
+All carry the labels `mode` (`espresso`, `filter` or `french_press`) and `id` (the brew's UUID;
+why, see [ADR 0004](docs/adr/0004-labels-and-cardinality.md)).
 
 | Metric | Timestamp | |
 |--------|-----------|---|
@@ -49,7 +52,7 @@ All carry the labels `mode` (`espresso` or `filter`) and `id` (the brew's UUID; 
 | `caparao_brew_dose_grams` | brew end | |
 | `caparao_brew_ratio` | brew end | yield / dose |
 | `caparao_brew_duration_seconds` | brew end | end - start |
-| `caparao_brew_time_to_first_drop_seconds` | brew end | espresso only |
+| `caparao_brew_time_to_first_drop_seconds` | brew end | espresso only (filter and French press have no first drop) |
 | `caparao_brew_flow_avg_grams_per_second` | brew end | |
 | `caparao_brew_weight_grams` | each sample (`started_at_ms + t_ms`) | the curve |
 | `caparao_brew_flow_grams_per_second` | each sample | the curve |
@@ -112,7 +115,7 @@ docker compose up -d
 - Grafana is on `http://localhost:3000` (user `admin`, password from `.env`) with the
   Prometheus datasource and the **Caparaó brews** dashboard provisioned: brews per day, yield /
   dose, ratio and duration per brew, and the weight and flow curves (pick a brew in the `id`
-  variable or zoom into it).
+  variable or zoom into it). The `mode` variable offers espresso, filter and French press.
 - Back up the `exporter-data` volume: it is the source of truth. Prometheus can be rebuilt from
   it with `resend` (within the out-of-order window).
 
@@ -143,8 +146,10 @@ AUTH_TOKEN=dev-token REMOTE_WRITE_URL=http://localhost:9090/api/v1/write DB_PATH
 
 ### Contract files
 
-`testdata/contract` is a copy of `contract/` in the Caparaó repository. When the contract
-changes there, re-copy it and run the tests:
+`testdata/contract` is a copy of `contract/` in the Caparaó repository, plus a local
+`valid/french-press.json` fixture (the example the Caparaó stub tests inline until #125 adds
+it there). When the contract changes there, re-copy it, re-add the local fixture if it is still
+missing upstream, and run the tests:
 
 ```sh
 scripts/sync-contract.sh ../caparao && go test ./...

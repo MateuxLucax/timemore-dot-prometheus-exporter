@@ -330,7 +330,7 @@
         "name": "mode",
         "label": "Mode",
         "type": "custom",
-        "query": "espresso,filter",
+        "query": "espresso,filter,french_press",
         "multi": true,
         "includeAll": true,
         "allValue": ".*",

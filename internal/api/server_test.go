@@ -126,6 +126,48 @@ func TestResendWithChangedBodyReplaces(t *testing.T) {
 	}
 }
 
+func TestFrenchPressUpsert(t *testing.T) {
+	ts, _ := newTestServer(t)
+	body := contractFiles(t, "valid")["french-press.json"]
+	want, err := brew.Parse(body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resp, b := do(t, "POST", ts.URL+"/api/v1/brews", testToken, body); resp.StatusCode != 201 {
+		t.Fatalf("first POST = %d, want 201 (%s)", resp.StatusCode, b)
+	}
+	resp, b := do(t, "GET", ts.URL+"/api/v1/brews/"+want.ID, testToken, nil)
+	if resp.StatusCode != 200 {
+		t.Fatalf("GET = %d, want 200 (%s)", resp.StatusCode, b)
+	}
+	var got map[string]any
+	if err := json.Unmarshal(b, &got); err != nil {
+		t.Fatal(err)
+	}
+	if got["mode"] != "french_press" {
+		t.Errorf("mode = %v, want french_press", got["mode"])
+	}
+	if v, present := got["time_to_first_drop_s"]; !present || v != nil {
+		t.Errorf("time_to_first_drop_s = %v (present %t), want null", v, present)
+	}
+
+	changed := bytes.Replace(body, []byte(`"yield_g": 300.0`), []byte(`"yield_g": 310.0`), 1)
+	if bytes.Equal(changed, body) {
+		t.Fatal("test fixture did not change")
+	}
+	if resp, b := do(t, "POST", ts.URL+"/api/v1/brews", testToken, changed); resp.StatusCode != 200 {
+		t.Fatalf("resend changed = %d, want 200 (%s)", resp.StatusCode, b)
+	}
+	got = nil
+	resp, b = do(t, "GET", ts.URL+"/api/v1/brews/"+want.ID, testToken, nil)
+	if resp.StatusCode != 200 || json.Unmarshal(b, &got) != nil {
+		t.Fatalf("GET after replace = %d (%s)", resp.StatusCode, b)
+	}
+	if got["mode"] != "french_press" || got["yield_g"] != 310.0 {
+		t.Errorf("replaced brew = %s", b)
+	}
+}
+
 func TestInvalidFilesAreRejected(t *testing.T) {
 	ts, _ := newTestServer(t)
 	for name, body := range contractFiles(t, "invalid") {

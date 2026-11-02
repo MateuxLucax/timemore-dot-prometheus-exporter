@@ -6,6 +6,7 @@
   "dose_g": 18.5,
   "yield_g": 9.8,
   "time_to_first_drop_s": 7.1,
+  "tared_at_ms": 1792937992900,
   "flow_avg_gps": 0.8,
   "flow_peak_gps": 1.4,
   "interrupted": true,

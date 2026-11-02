@@ -23,9 +23,14 @@ Tests iterate over both directories, so adding a file adds a test case. Use exam
 - `mode`: `"filter"` or `"espresso"`.
 - `started_at_ms`, `ended_at_ms`: whole Unix epoch milliseconds, and `ended_at_ms > started_at_ms` strictly. This is
   the one rule JSON Schema cannot express; servers check it in code and `invalid/` has files for it.
+  `started_at_ms` is the first drop (espresso) or the first water (filter).
 - `dose_g`: number, `> 0` and at most 1000. Required, never null (a brew always has a dose).
 - `yield_g`: number, `>= 0` and at most 10000. An interrupted brew may have 0.
 - `time_to_first_drop_s`: number `>= 0`, or `null`. The key is always present; filter brews send `null`.
+- `tared_at_ms`: optional, whole Unix epoch milliseconds and `<= started_at_ms`; espresso only, left out otherwise.
+  It records when the scale was tared, so the period before the first drop is explicit instead of missing. When present,
+  `time_to_first_drop_s` must equal `(started_at_ms - tared_at_ms) / 1000` within 1 ms, and servers reject it otherwise.
+  Samples stay relative to `started_at_ms`: the gap is the timestamp, not zero-weight samples.
 - `flow_avg_gps`, `flow_peak_gps`: numbers `>= 0`.
 - `interrupted`: boolean, `true` when the brew ended early (cup lifted, connection lost, stopped by hand).
 - `samples`: array, may be empty, at most 20000 items (about 33 minutes at 10 Hz). Each item has `t_ms` (whole,

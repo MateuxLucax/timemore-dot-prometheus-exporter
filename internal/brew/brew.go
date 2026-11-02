@@ -32,9 +32,11 @@ type Brew struct {
 	DoseG            float64  `json:"dose_g"`
 	YieldG           float64  `json:"yield_g"`
 	TimeToFirstDropS *float64 `json:"time_to_first_drop_s"`
-	FlowAvgGps       float64  `json:"flow_avg_gps"`
-	FlowPeakGps      float64  `json:"flow_peak_gps"`
-	Interrupted      bool     `json:"interrupted"`
+	// Optional tare timestamp (espresso only), at or before StartedAtMs.
+	TaredAtMs   *int64  `json:"tared_at_ms,omitempty"`
+	FlowAvgGps  float64 `json:"flow_avg_gps"`
+	FlowPeakGps float64 `json:"flow_peak_gps"`
+	Interrupted bool    `json:"interrupted"`
 	// Optional brew notes (caparao docs/adr/0021-brew-notes.md); left out of the body when unset.
 	RecipeName *string  `json:"recipe_name,omitempty"`
 	Coffee     *string  `json:"coffee,omitempty"`
@@ -67,7 +69,7 @@ func Parse(body []byte) (*Brew, error) {
 		return nil, errors.New("body must be a JSON object")
 	}
 	if err := onlyKeys(obj, "", "id", "mode", "started_at_ms", "ended_at_ms", "dose_g", "yield_g",
-		"time_to_first_drop_s", "flow_avg_gps", "flow_peak_gps", "interrupted", "samples",
+		"time_to_first_drop_s", "tared_at_ms", "flow_avg_gps", "flow_peak_gps", "interrupted", "samples",
 		"recipe_name", "coffee", "grind", "water_temp_c", "rating", "notes"); err != nil {
 		return nil, err
 	}
@@ -127,6 +129,23 @@ func Parse(body []byte) (*Brew, error) {
 	}
 	if b.FlowAvgGps < 0 {
 		return nil, errors.New("flow_avg_gps must be >= 0")
+	}
+	if _, present := obj["tared_at_ms"]; present {
+		tared, err := integer(obj, "tared_at_ms", 0)
+		if err != nil {
+			return nil, err
+		}
+		if tared > b.StartedAtMs {
+			return nil, errors.New("tared_at_ms must be <= started_at_ms")
+		}
+		if b.TimeToFirstDropS == nil {
+			return nil, errors.New("tared_at_ms requires time_to_first_drop_s")
+		}
+		// 1 ms of tolerance: the contract compares the gap with a float in seconds.
+		if math.Abs(*b.TimeToFirstDropS*1000-float64(b.StartedAtMs-tared)) > 1 {
+			return nil, errors.New("time_to_first_drop_s must match started_at_ms - tared_at_ms")
+		}
+		b.TaredAtMs = &tared
 	}
 	if b.FlowPeakGps, err = number(obj, "flow_peak_gps"); err != nil {
 		return nil, err

@@ -112,6 +112,33 @@ func TestCheckpoint(t *testing.T) {
 	}
 }
 
+func TestTareTimestampRoundTrip(t *testing.T) {
+	s := open(t, filepath.Join(t.TempDir(), "c.db"))
+	b := espresso(t)
+	if b.TaredAtMs == nil {
+		t.Fatal("espresso fixture has no tared_at_ms")
+	}
+	if _, err := s.Upsert(t.Context(), b); err != nil {
+		t.Fatal(err)
+	}
+	got, err := s.Get(t.Context(), b.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.TaredAtMs == nil || *got.TaredAtMs != *b.TaredAtMs {
+		t.Fatalf("tare timestamp not kept: %+v", got)
+	}
+
+	// A body without the optional field keeps it null.
+	b.TaredAtMs = nil
+	if _, err := s.Upsert(t.Context(), b); err != nil {
+		t.Fatal(err)
+	}
+	if got, _ = s.Get(t.Context(), b.ID); got.TaredAtMs != nil {
+		t.Fatalf("cleared tare timestamp kept: %+v", got)
+	}
+}
+
 func TestBrewNotesRoundTrip(t *testing.T) {
 	s := open(t, filepath.Join(t.TempDir(), "db.sqlite"))
 	body, err := os.ReadFile(filepath.Join("..", "..", "testdata", "contract", "valid", "with-notes.json"))

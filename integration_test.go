@@ -39,6 +39,22 @@ type itPoint struct {
 	Value float64
 }
 
+// moveBrew clones a contract brew, gives it id and moves it to start/end. The optional tare
+// timestamp moves with it, so the contract invariant (started - tared == first drop) still holds.
+func moveBrew(base map[string]any, id string, start, end int64) map[string]any {
+	d := make(map[string]any, len(base))
+	for k, v := range base {
+		d[k] = v
+	}
+	d["id"], d["started_at_ms"], d["ended_at_ms"] = id, start, end
+	if tared, ok := d["tared_at_ms"]; ok && tared != nil {
+		if ttfd, ok := d["time_to_first_drop_s"].(float64); ok {
+			d["tared_at_ms"] = start - int64(ttfd*1000)
+		}
+	}
+	return d
+}
+
 func randomUUID() string {
 	b := make([]byte, 16)
 	rand.Read(b)
@@ -175,8 +191,7 @@ func TestIntegration(t *testing.T) {
 	id := randomUUID()
 	start := time.Now().Add(-time.Hour).UnixMilli()
 	end := start + 28600
-	d["id"], d["started_at_ms"], d["ended_at_ms"] = id, start, end
-	body, _ := json.Marshal(d)
+	body, _ := json.Marshal(moveBrew(d, id, start, end))
 
 	if code := post(t, base, token, body); code != 201 {
 		t.Fatalf("POST = %d, want 201", code)
@@ -210,12 +225,7 @@ func TestIntegration(t *testing.T) {
 
 	t.Run("resend everything is accepted and duplicates nothing", func(t *testing.T) {
 		// A newer brew first, so the resent one is out of order for Prometheus' head.
-		d2 := map[string]any{}
-		for k, v := range d {
-			d2[k] = v
-		}
-		d2["id"], d2["started_at_ms"], d2["ended_at_ms"] = randomUUID(), time.Now().UnixMilli()-30000, time.Now().UnixMilli()
-		b2, _ := json.Marshal(d2)
+		b2, _ := json.Marshal(moveBrew(d, randomUUID(), time.Now().UnixMilli()-30000, time.Now().UnixMilli()))
 		if code := post(t, base, token, b2); code != 201 {
 			t.Fatalf("POST newer = %d", code)
 		}
@@ -230,12 +240,8 @@ func TestIntegration(t *testing.T) {
 	})
 
 	t.Run("brew older than the out-of-order window is rejected and reported", func(t *testing.T) {
-		d3 := map[string]any{}
-		for k, v := range d {
-			d3[k] = v
-		}
 		old := time.Now().Add(-60 * 24 * time.Hour).UnixMilli()
-		d3["id"], d3["started_at_ms"], d3["ended_at_ms"] = randomUUID(), old, old+28600
+		d3 := moveBrew(d, randomUUID(), old, old+28600)
 		b3, _ := json.Marshal(d3)
 		if code := post(t, base, token, b3); code != 201 { // the API still stores it
 			t.Fatalf("POST old = %d", code)

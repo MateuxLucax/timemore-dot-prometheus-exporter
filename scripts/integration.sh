@@ -6,10 +6,12 @@ cd "$(dirname "$0")/.."
 
 name=timemore-dot-prometheus-exporter-it
 port=${PROMETHEUS_PORT:-19090}
+# Pinned by digest (tag prom/prometheus:v3.5.0) so the integrity check is not lost.
+image=prom/prometheus@sha256:63805ebb8d2b3920190daf1cb14a60871b16fd38bed42b857a3182bc621f4996
 docker rm -f "$name" >/dev/null 2>&1 || true
 docker run -d --rm --name "$name" -p "127.0.0.1:$port:9090" \
   -v "$PWD/prometheus.yml:/etc/prometheus/prometheus.yml:ro" \
-  prom/prometheus:v3.5.0 \
+  "$image" \
   --config.file=/etc/prometheus/prometheus.yml \
   --storage.tsdb.path=/prometheus \
   --web.enable-remote-write-receiver >/dev/null

@@ -4,7 +4,7 @@
 
 ## Description
 
-<!-- What changed and why. Link issues, ADRs or docs when relevant. -->
+<!-- What changed and why. Link its issue. -->
 
 ## Test scenarios
 

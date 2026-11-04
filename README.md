@@ -44,7 +44,7 @@ then bumps its pinned commit and updates itself to match.
 ## Metrics
 
 All carry the labels `mode` (`espresso`, `filter` or `french_press`) and `id` (the brew's UUID;
-why, see [ADR 0004](docs/adr/0004-labels-and-cardinality.md)).
+why, see the [labels decision](https://github.com/MateuxLucax/timemore-dot-prometheus-exporter/issues/14)).
 
 | Metric | Timestamp | |
 |--------|-----------|---|
@@ -99,7 +99,7 @@ identical data is harmless: Prometheus accepts a sample identical to one it alre
   into an empty Prometheus) raise the window, then run `resend`.
 - A replaced brew (same `id`, new body) is sent again, but Prometheus cannot change a value it
   already stores: changed values at the same timestamps are rejected as duplicates and reported
-  the same way. SQLite keeps the corrected brew. See [ADR 0002](docs/adr/0002-remote-write-original-timestamps.md).
+  the same way. SQLite keeps the corrected brew. See the [timestamps decision](https://github.com/MateuxLucax/timemore-dot-prometheus-exporter/issues/12).
 - Retention defaults to 15 days; the example sets `--storage.tsdb.retention.time=10y`.
 
 ## Run with Docker Compose
@@ -142,7 +142,46 @@ AUTH_TOKEN=dev-token REMOTE_WRITE_URL=http://localhost:9090/api/v1/write DB_PATH
 
 `main.go` (configuration, subcommands, wiring) stays at the root; the logic is in `internal/`:
 `brew` (validation), `store` (SQLite), `api` (HTTP), `syncer` (sync loop), `remotewrite`
-(Prometheus client). See [Architecture](docs/architecture.md).
+(Prometheus client).
+
+## Architecture
+
+One binary, one process: `main.go` reads the environment, opens the database and starts the
+HTTP server and the sync loop.
+
+```mermaid
+flowchart TB
+    app["Caparaó app"] -->|"POST/GET /api/v1/brews, GET /healthz"| api
+    subgraph exporter["timemore-dot-prometheus-exporter"]
+        api["internal/api<br/>auth (constant time), 4 MiB limit, routing, access log"]
+        brew["internal/brew<br/>contract validation (validates testdata/contract)"]
+        store["internal/store<br/>SQLite: migrations, upsert, pending, checkpoint"]
+        syncer["internal/syncer<br/>loop every SYNC_INTERVAL, brew -> series"]
+        rw["internal/remotewrite<br/>protobuf (hand-encoded) + snappy, HTTP"]
+        api --> brew
+        api --> store
+        syncer --> store
+        syncer --> rw
+    end
+    store --- db[("caparao.db")]
+    rw -->|"remote write 1.0"| prom[("Prometheus")]
+    graf["Grafana"] --> prom
+```
+
+The `brews` table holds one row per brew id with the contract fields plus `received_at_ms`,
+`version` (bumped by every upsert), `sent_version`, `sent_at_ms` and `sync_error`; `samples`
+holds the curve keyed by `(brew_id, seq)` in upload order. The connection uses WAL so the
+`sync` and `resend` subcommands can run next to the server.
+
+### Sync and checkpoint
+
+Every `SYNC_INTERVAL` (and at start) the sync loop reads brews with `version > sent_version`
+in one transaction, sends them with remote write (summaries at the brew's end, curve at
+`started_at_ms + t_ms`), then sets `sent_version` to the version it read. Only HTTP 400 is
+rejected for good: the brew is retried series by series so good series still land, then the
+reason is logged and stored in `sync_error`. Network errors, 5xx, 404 and 429 fail the run
+and are retried next time. A brew replaced while being sent keeps its newer version pending.
+`resend` sets every `sent_version` to 0 and syncs.
 
 ### Contract files
 
@@ -169,11 +208,10 @@ Without `PROMETHEUS_URL` it is skipped. It checks summaries at the brew's end ti
 at each sample's time, that `resend` duplicates nothing, and that a brew older than the window is
 reported as rejected.
 
-## Documentation
+## Decisions
 
-- [Architecture](docs/architecture.md): components, sync and checkpoint, deployment
-- [Decision records](docs/adr/README.md)
-- [Acceptance checklist](docs/acceptance.md): the Caparaó roadmap's stage 8 criteria and how each was verified
+GitHub Issues are the decision log (label `decision`); the former ADRs are closed issues
+#11-#15. `AGENTS.md` holds the durable contracts for this repository.
 
 ## License
 

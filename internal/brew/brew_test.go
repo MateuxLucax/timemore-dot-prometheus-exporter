@@ -11,7 +11,7 @@ func files(t *testing.T, dir string) map[string][]byte {
 	t.Helper()
 	paths, _ := filepath.Glob(filepath.Join("..", "..", "testdata", "contract", dir, "*.json"))
 	if len(paths) == 0 {
-		t.Fatalf("no contract files in %s (run scripts/sync-contract.sh)", dir)
+		t.Fatalf("no contract files in %s", dir)
 	}
 	out := map[string][]byte{}
 	for _, p := range paths {

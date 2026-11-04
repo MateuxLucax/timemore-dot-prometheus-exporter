@@ -1,6 +1,8 @@
 # 5. The upload contract is copied into testdata
 
-Status: Accepted
+Status: Superseded by MateuxLucax/caparao#170.
+
+`testdata/contract` is now the canonical upload contract rather than a copy; a contract change starts here and the Caparaó app bumps its pinned commit and updates itself.
 
 ## Context
 
@@ -10,7 +12,7 @@ is separate (Caparaó ADR 0014) and should build and test on its own.
 
 ## Decision
 
-`testdata/contract` is a verbatim copy. `scripts/sync-contract.sh [path]` re-copies it. The
+`testdata/contract` is a verbatim copy. The
 validation code in `internal/brew` is the stub's `validate.go` with the same rules and messages,
 and `internal/api` keeps the stub's test suite (statuses, error bodies, auth, sizes, methods),
 running against a real SQLite file.
@@ -25,5 +27,4 @@ press. Neither changes the schema or runtime semantics.
 
 - `go test ./...` needs nothing outside this repository.
 - The copy can fall behind: after a contract change in the app repository, run the script and
-  commit the result together with any code change. The script replaces the whole directory, so
-  re-add the local French press fixture until Caparaó #125 provides it upstream.
+  commit the result together with any code change.

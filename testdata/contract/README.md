@@ -1,7 +1,6 @@
 # Upload contract
 
-The wire format of `POST /api/v1/brews` (and of `GET /api/v1/brews/{id}`, which returns the same body), shared by the Android client and every server (the stub in `../stub`, later
-`timemore-dot-prometheus-exporter`). The same files are checked on both sides, so they cannot drift apart.
+The wire format of `POST /api/v1/brews` (and of `GET /api/v1/brews/{id}`, which returns the same body), shared by the Android client and every server. This `testdata/contract` is the canonical copy: a contract change starts here, and the Caparaó app then bumps its pinned commit and updates itself to match, so the copies cannot drift apart.
 
 | Path | What it is |
 |------|------------|

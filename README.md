@@ -27,9 +27,9 @@ Prometheus has not seen yet and only then advances its per-brew checkpoint.
 
 ## API
 
-The wire format is the Caparaó upload contract, copied into [`testdata/contract`](testdata/contract)
-(see its [README](testdata/contract/README.md)). The same JSON files are tested against the app,
-the app repo's stub server and this server.
+The wire format is the Caparaó upload contract, which is canonical in [`testdata/contract`](testdata/contract)
+(see its [README](testdata/contract/README.md)). A contract change starts here; the Caparaó app
+then bumps its pinned commit and updates itself to match.
 
 | Request | Auth | Answer |
 |---------|------|--------|
@@ -146,14 +146,8 @@ AUTH_TOKEN=dev-token REMOTE_WRITE_URL=http://localhost:9090/api/v1/write DB_PATH
 
 ### Contract files
 
-`testdata/contract` is a copy of `contract/` in the Caparaó repository, plus a local
-`valid/french-press.json` fixture (the example the Caparaó stub tests inline until #125 adds
-it there). When the contract changes there, re-copy it, re-add the local fixture if it is still
-missing upstream, and run the tests:
-
-```sh
-scripts/sync-contract.sh ../caparao && go test ./...
-```
+`testdata/contract` is the canonical upload contract for this repository. A contract change
+starts here; the Caparaó app then bumps its pinned commit and updates itself to match.
 
 ### Integration test
 

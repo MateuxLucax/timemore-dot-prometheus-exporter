@@ -1,5 +1,5 @@
 // Package brew validates upload bodies against the contract in testdata/contract (a copy of caparao/contract).
-// The rules and messages are identical to caparao/stub/validate.go.
+// It validates testdata/contract: every file in valid/ and invalid/ exercises these rules.
 package brew
 
 import (

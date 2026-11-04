@@ -6,7 +6,7 @@ Verified on 2026-10-25 with Go 1.27.2, Prometheus v3.5.0 and Grafana 12.1.1 (Doc
 |-----------|--------|-----|
 | Separate repository, Go | Done | This repository. |
 | SQLite is the source of truth; 2xx only after commit | Done | `internal/api` calls `store.Upsert` (one transaction) before writing the status; `internal/api` tests run on a real SQLite file. |
-| The `contract/` files pass exactly as against the stub | Done | `internal/api/server_test.go` is the stub's suite against `testdata/contract`: every valid file `201` then `200`, every invalid file `400` with `{"error": ...}`, `401`, `413`, `405`, 20000/20001 samples. `internal/brew` tests also run every file through the validator. |
+| The `testdata/contract` files pass exactly as designed | Done | `internal/api/server_test.go` runs against `testdata/contract`, the canonical contract: every valid file `201` then `200`, every invalid file `400` with `{"error": ...}`, `401`, `413`, `405`, 20000/20001 samples. `internal/brew` tests also run every file through the validator. |
 | Connection test: `GET /healthz` without token, authenticated `GET /api/v1/brews` creates nothing | Done | `TestHealthz`, `TestAuth`, `TestValidFilesAreIdempotent` (list). |
 | Upsert on a real SQLite: re-sending an `id` duplicates neither brew nor samples | Done | `internal/store` `TestUpsertIsIdempotent` (temp dir file; also a changed body replaces brew and samples); `TestMigrationsAreVersionedAndReopenable`. |
 | Separate sync every 15 min (configurable), original timestamps, checkpoint after success | Done | `internal/syncer`; `SYNC_INTERVAL`; `TestCheckpoint`, `TestReplacedBrewIsResent`. |

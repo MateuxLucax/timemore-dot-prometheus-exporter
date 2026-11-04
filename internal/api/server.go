@@ -1,5 +1,5 @@
 // Package api serves the upload contract (testdata/contract): POST and GET /api/v1/brews,
-// GET /api/v1/brews/{id} and GET /healthz. Routing, statuses, error bodies and the access log match caparao/stub; the
+// GET /api/v1/brews/{id} and GET /healthz. Routing, statuses, error bodies and the access log follow testdata/contract; the
 // difference is that brews are upserted into SQLite and 2xx is sent only after the commit.
 package api
 

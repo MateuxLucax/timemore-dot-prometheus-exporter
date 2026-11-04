@@ -10,7 +10,7 @@ flowchart TB
     app["Caparaó app"] -->|"POST/GET /api/v1/brews, GET /healthz"| api
     subgraph exporter["timemore-dot-prometheus-exporter"]
         api["internal/api<br/>auth (constant time), 4 MiB limit, routing, access log"]
-        brew["internal/brew<br/>contract validation (same rules as the stub)"]
+        brew["internal/brew<br/>contract validation (validates testdata/contract)"]
         store["internal/store<br/>SQLite: migrations, upsert, pending, checkpoint"]
         syncer["internal/syncer<br/>loop every SYNC_INTERVAL, brew -> series"]
         rw["internal/remotewrite<br/>protobuf (hand-encoded) + snappy, HTTP"]

@@ -142,7 +142,7 @@ func (s *Syncer) Loop(ctx context.Context, interval time.Duration) {
 }
 
 // Series maps a brew to its time series: summaries at the brew's end time, the curve at
-// started_at_ms + t_ms. Labels: mode and id (see docs/adr/0004-labels-and-cardinality.md).
+// started_at_ms + t_ms. Labels: mode and id (see issue #14).
 func Series(b *brew.Brew) []remotewrite.Series {
 	end := b.EndedAtMs
 	summary := func(name string, v float64) remotewrite.Series {

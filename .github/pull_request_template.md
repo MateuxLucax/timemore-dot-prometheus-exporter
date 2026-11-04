@@ -4,7 +4,7 @@
 
 ## Description
 
-<!-- What changed and why. Link issues, ADRs or docs when relevant. -->
+<!-- What changed and why. Link its issue. -->
 
 ## Test scenarios
 
@@ -16,19 +16,11 @@
 
 ## Evidence
 
-<!-- Proof the scenarios and checks passed: command output (e.g. `scripts/check.sh`), CI run links, logs. -->
+<!-- Proof the scenarios and checks passed: command output (`go test ./...`, `scripts/integration.sh`), CI run links, logs. -->
 
 ```text
 
 ```
-
-## Screenshots
-
-<!-- Screens for every visible change (before/after when useful). Write "N/A" for changes with nothing to show. -->
-
-| Before | After |
-|--------|-------|
-| | |
 
 ## Out of scope
 

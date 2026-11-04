@@ -1,7 +1,6 @@
 # Upload contract
 
-The wire format of `POST /api/v1/brews` (and of `GET /api/v1/brews/{id}`, which returns the same body), shared by the Android client and every server (the stub in `../stub`, later
-`timemore-dot-prometheus-exporter`). The same files are checked on both sides, so they cannot drift apart.
+The wire format of `POST /api/v1/brews` (and of `GET /api/v1/brews/{id}`, which returns the same body), shared by the Android client and every server. This `testdata/contract` is the canonical copy: a contract change starts here, and the Caparaó app then bumps its pinned commit and updates itself to match, so the copies cannot drift apart.
 
 | Path | What it is |
 |------|------------|
@@ -15,11 +14,11 @@ Tests iterate over both directories, so adding a file adds a test case. Use exam
 
 - All fields are required except the brew notes below, and unknown properties (also inside samples) are rejected. A
   new field means a change to the contract here first.
-- Brew notes ([ADR 0021](https://github.com/MateuxLucax/caparao/issues/105)), optional and left out when unset, never null: `recipe_name`
+- Brew notes ([MateuxLucax/caparao#105](https://github.com/MateuxLucax/caparao/issues/105)), optional and left out when unset, never null: `recipe_name`
   (≤ 80 characters), `coffee` (≤ 80), `grind` (≤ 40), `water_temp_c` (integer 1–100), `rating` (integer 1–5), `notes`
   (≤ 1000, kept out of Prometheus). An edit on the phone re-sends the brew, and the upsert replaces them.
 - `id`: lowercase UUID string (8-4-4-4-12 hex), generated on the phone. The server upserts on it
-  ([ADR 0007](https://github.com/MateuxLucax/caparao/issues/91)); the same `id` re-sent with a different body replaces the stored brew.
+  ([MateuxLucax/caparao#91](https://github.com/MateuxLucax/caparao/issues/91)); the same `id` re-sent with a different body replaces the stored brew.
 - `mode`: `"filter"`, `"espresso"` or `"french_press"`.
 - `started_at_ms`, `ended_at_ms`: whole Unix epoch milliseconds, and `ended_at_ms > started_at_ms` strictly. This is
   the one rule JSON Schema cannot express; servers check it in code and `invalid/` has files for it. `started_at_ms` is
